@@ -8,8 +8,25 @@
 
 #import <UIKit/UIKit.h>
 
+@interface EMConfUserView : UIView
+
+@property (weak, nonatomic) IBOutlet UIView *topView;
+@property (weak, nonatomic) IBOutlet UIImageView *imgView;
+@property (weak, nonatomic) IBOutlet UIImageView *statusImgView;
+@property (weak, nonatomic) IBOutlet UILabel *nameLabel;
+
+@end
+
 @interface ConferenceViewController : UIViewController
 
-- (instancetype)initWithCallId:(NSString *)aCallId;
+@property (nonatomic, readonly) EMCallType type;
+
+- (instancetype)initWithCallId:(NSString *)aCallId
+                       creater:(NSString *)aCreater
+                    otherUsers:(NSArray *)aOthers
+                          type:(EMCallType)aType;
+
+- (instancetype)initWithUsers:(NSArray *)aUserNams
+                         type:(EMCallType)aType;
 
 @end
