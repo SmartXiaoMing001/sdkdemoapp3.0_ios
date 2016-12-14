@@ -148,6 +148,7 @@
         return;
     }
     
+    [self showHudInView:self.view hint:NSLocalizedString(@"searching", @"Searching")];
     UISearchBar *searchBar = self.searchController.searchBar;
     __block EMGroup *foundGroup= nil;
     [self.dataSource enumerateObjectsUsingBlock:^(EMGroup *group, NSUInteger idx, BOOL *stop){
@@ -167,26 +168,28 @@
     else
     {
         __weak typeof(self) weakSelf = self;
-        [self showHudInView:self.view hint:NSLocalizedString(@"searching", @"Searching")];
-        dispatch_async(dispatch_get_main_queue(), ^{
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
             EMError *error = nil;
             EMGroup *group = [[EMClient sharedClient].groupManager searchPublicGroupWithId:searchBar.text error:&error];
-            PublicGroupListViewController *strongSelf = weakSelf;
-            [strongSelf hideHud];
-            if (strongSelf)
-            {
-                if (!error) {
-                    [strongSelf.resultController.displaySource removeAllObjects];
-                    [strongSelf.resultController.displaySource addObject:group];
-                    [strongSelf.resultController.tableView reloadData];
-                }
-                else
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [weakSelf hideHud];
+                PublicGroupListViewController *strongSelf = weakSelf;
+                if (strongSelf)
                 {
-                    [strongSelf showHint:NSLocalizedString(@"notFound", @"Can't found")];
+                    if (!error) {
+                        [strongSelf.resultController.displaySource removeAllObjects];
+                        [strongSelf.resultController.displaySource addObject:group];
+                        [strongSelf.resultController.tableView reloadData];
+                    }
+                    else
+                    {
+                        [strongSelf showHint:NSLocalizedString(@"notFound", @"Can't found")];
+                    }
                 }
-            }
+            });
         });
     }
+    [self hideHud];
 }
 
 - (void)searchButtonClickedWithString:(NSString *)aString
@@ -244,7 +247,9 @@
     }];
     
     UISearchBar *searchBar = self.searchController.searchBar;
-    self.tableView.tableHeaderView = searchBar;
+    [self.view addSubview:searchBar];
+    [searchBar sizeToFit];
+    self.tableView.frame = CGRectMake(0, searchBar.frame.size.height, self.view.frame.size.width,self.view.frame.size.height - searchBar.frame.size.height);
 }
 
 #pragma mark - data
