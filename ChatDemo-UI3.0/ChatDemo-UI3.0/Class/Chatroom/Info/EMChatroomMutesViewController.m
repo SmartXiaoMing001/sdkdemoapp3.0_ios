@@ -84,7 +84,8 @@
     }
     
     NSIndexPath *indexPath = _currentLongPressIndex;
-    NSString *userName = [self.dataArray objectAtIndex:indexPath.row];
+    EMMuteMember *item = [self.dataArray objectAtIndex:indexPath.row];
+    NSString *userName = item.userName;
     _currentLongPressIndex = nil;
     
     [self hideHud];
@@ -99,6 +100,8 @@
     if (!error) {
         [self.dataArray removeObject:userName];
         [self.tableView reloadData];
+        
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"UpdateChatroomDetail" object:self.chatroom];
     }
     else {
         [self showHint:error.errorDescription];

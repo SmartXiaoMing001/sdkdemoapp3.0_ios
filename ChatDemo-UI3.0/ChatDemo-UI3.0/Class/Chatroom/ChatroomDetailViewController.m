@@ -51,7 +51,6 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    self.tableView.tableFooterView = [[UIView alloc] init];
     // Do any additional setup after loading the view.
     self.title = @"Chatroom Info";
     
@@ -61,29 +60,39 @@
     [backButton addTarget:self.navigationController action:@selector(popViewControllerAnimated:) forControlEvents:UIControlEventTouchUpInside];
     UIBarButtonItem *backItem = [[UIBarButtonItem alloc] initWithCustomView:backButton];
     [self.navigationItem setLeftBarButtonItem:backItem];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(updateUI:) name:@"UpdateChatroomDetail" object:nil];
+    
+    self.tableView.tableFooterView = self.footerView;
 
     [self fetchChatroomInfo];
+}
+
+- (void)dealloc
+{
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
 - (UIView *)footerView
 {
     if (_footerView == nil) {
-        _footerView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.tableView.frame.size.width, 160)];
+        _footerView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.tableView.frame.size.width, 120)];
         _footerView.backgroundColor = [UIColor clearColor];
         
-        _destroyButton = [[UIButton alloc] initWithFrame:CGRectMake(20, 40, _footerView.frame.size.width - 40, 35)];
+        _destroyButton = [[UIButton alloc] initWithFrame:CGRectMake(20, 40, _footerView.frame.size.width - 40, 40)];
         _destroyButton.accessibilityIdentifier = @"leave";
         [_destroyButton setTitle:NSLocalizedString(@"chatroom.destroy", @"dissolution of the group") forState:UIControlStateNormal];
         [_destroyButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
         [_destroyButton addTarget:self action:@selector(destroyAction) forControlEvents:UIControlEventTouchUpInside];
         [_destroyButton setBackgroundColor: [UIColor colorWithRed:191 / 255.0 green:48 / 255.0 blue:49 / 255.0 alpha:1.0]];
         
-        _leaveButton = [[UIButton alloc] initWithFrame:CGRectMake(20, 40, _footerView.frame.size.width - 40, 35)];
+        _leaveButton = [[UIButton alloc] initWithFrame:CGRectMake(20, 40, _footerView.frame.size.width - 40, 40)];
         _leaveButton.accessibilityIdentifier = @"leave";
         [_leaveButton setTitle:NSLocalizedString(@"chatroom.leave", @"quit the group") forState:UIControlStateNormal];
         [_leaveButton setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
         [_leaveButton addTarget:self action:@selector(leaveAction) forControlEvents:UIControlEventTouchUpInside];
         [_leaveButton setBackgroundColor:[UIColor colorWithRed:191 / 255.0 green:48 / 255.0 blue:49 / 255.0 alpha:1.0]];
+        [_footerView addSubview:_leaveButton];
     }
     
     return _footerView;
@@ -133,7 +142,7 @@
     {
         cell.textLabel.text = NSLocalizedString(@"chatroom.occupantCount", @"members count");
         cell.accessoryType = UITableViewCellAccessoryNone;
-        cell.detailTextLabel.text = [NSString stringWithFormat:@"%i / %i", (int)_chatroom.membersCount, (int)_chatroom.maxMembersCount];
+        cell.detailTextLabel.text = [NSString stringWithFormat:@"%i / %i", (int)_chatroom.membersCount, (int)_chatroom.maxOccupantsCount];
     }
     else if (indexPath.row == 3) {
         cell.textLabel.text = NSLocalizedString(@"group.owner", @"Owner");
@@ -239,6 +248,15 @@
 
 #pragma mark - action
 
+- (void)updateUI:(NSNotification *)aNotif
+{
+    id obj = aNotif.object;
+    if (obj && [obj isKindOfClass:[EMChatroom class]]) {
+        self.chatroom = (EMChatroom *)obj;
+        [self reloadDataSource];
+    }
+}
+
 - (void)leaveAction
 {
     __weak typeof(self) weakSelf = self;
@@ -299,6 +317,14 @@
 
 - (void)reloadDataSource
 {
+    if (self.chatroom.permissionType == EMGroupPermissionTypeOwner) {
+        [self.leaveButton removeFromSuperview];
+        [self.footerView addSubview:self.destroyButton];
+    } else {
+        [self.destroyButton removeFromSuperview];
+        [self.footerView addSubview:self.leaveButton];
+    }
+    
     [self.tableView reloadData];
     [self hideHud];
 }

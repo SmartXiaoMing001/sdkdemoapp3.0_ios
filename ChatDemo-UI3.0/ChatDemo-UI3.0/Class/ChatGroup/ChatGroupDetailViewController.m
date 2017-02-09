@@ -55,19 +55,6 @@
 
 @implementation ChatGroupDetailViewController
 
-- (void)registerNotifications {
-    [self unregisterNotifications];
-    [[EMClient sharedClient].groupManager addDelegate:self delegateQueue:nil];
-}
-
-- (void)unregisterNotifications {
-    [[EMClient sharedClient].groupManager removeDelegate:self];
-}
-
-- (void)dealloc {
-    [self unregisterNotifications];
-}
-
 - (instancetype)initWithGroup:(EMGroup *)chatGroup
 {
     self = [super init];
@@ -121,8 +108,10 @@
     [addButton addTarget:self action:@selector(addMemberButtonAction) forControlEvents:UIControlEventTouchUpInside];
     self.addMemberItem = [[UIBarButtonItem alloc] initWithCustomView:addButton];
     
+    self.showRefreshHeader = YES;
     self.tableView.tableFooterView = self.footerView;
     
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(updateUI:) name:@"UpdateGroupDetail" object:nil];
     [self registerNotifications];
     
     [self fetchGroupInfo];
@@ -137,6 +126,20 @@
 - (void)viewDidDisappear:(BOOL)animated
 {
     [super viewDidDisappear:animated];
+}
+
+- (void)dealloc {
+    [self unregisterNotifications];
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
+- (void)registerNotifications {
+    [self unregisterNotifications];
+    [[EMClient sharedClient].groupManager addDelegate:self delegateQueue:nil];
+}
+
+- (void)unregisterNotifications {
+    [[EMClient sharedClient].groupManager removeDelegate:self];
 }
 
 #pragma mark - getter
@@ -413,6 +416,11 @@
 
 #pragma mark - data
 
+- (void)tableViewDidTriggerHeaderRefresh
+{
+    [self fetchGroupInfo];
+}
+
 - (void)fetchGroupInfo
 {
     __weak typeof(self) weakSelf = self;
@@ -422,7 +430,9 @@
         EMGroup *group = [[EMClient sharedClient].groupManager getGroupSpecificationFromServerWithId:weakSelf.chatGroup.groupId error:&error];
         dispatch_async(dispatch_get_main_queue(), ^{
             [weakSelf hideHud];
+            [weakSelf tableViewDidFinishTriggerHeader:YES reload:NO];
         });
+        
         if (!error) {
             weakSelf.chatGroup = group;
             EMConversation *conversation = [[EMClient sharedClient].chatManager getConversation:group.groupId type:EMConversationTypeGroupChat createIfNotExist:YES];
@@ -447,7 +457,7 @@
 - (void)reloadDataSource
 {
     dispatch_async(dispatch_get_main_queue(), ^{
-        if (self.chatGroup.permissionType == EMGroupPermissionTypeOwner || self.chatGroup.permissionType == EMGroupPermissionTypeAdmin) {
+        if (self.chatGroup.permissionType == EMGroupPermissionTypeOwner || self.chatGroup.permissionType == EMGroupPermissionTypeAdmin || self.chatGroup.setting.style == EMGroupStylePrivateMemberCanInvite) {
             self.navigationItem.rightBarButtonItem = self.addMemberItem;
         } else {
             self.navigationItem.rightBarButtonItem = nil;
@@ -472,6 +482,15 @@
 }
 
 #pragma mark - action
+
+- (void)updateUI:(NSNotification *)aNotif
+{
+    id obj = aNotif.object;
+    if (obj && [obj isKindOfClass:[EMGroup class]]) {
+        self.chatGroup = (EMGroup *)obj;
+        [self reloadDataSource];
+    }
+}
 
 - (void)addMemberButtonAction
 {

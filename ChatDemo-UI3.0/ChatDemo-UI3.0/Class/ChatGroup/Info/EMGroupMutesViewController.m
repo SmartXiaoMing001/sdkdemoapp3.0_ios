@@ -84,7 +84,8 @@
     }
     
     NSIndexPath *indexPath = _currentLongPressIndex;
-    NSString *userName = [self.dataArray objectAtIndex:indexPath.row];
+    EMMuteMember *item = [self.dataArray objectAtIndex:indexPath.row];
+    NSString *userName = item.userName;
     _currentLongPressIndex = nil;
     
     [self hideHud];
@@ -97,8 +98,10 @@
     
     [self hideHud];
     if (!error) {
-        [self.dataArray removeObject:userName];
+        [self.dataArray removeObject:item];
         [self.tableView reloadData];
+        
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"UpdateGroupDetail" object:self.group];
     }
     else {
         [self showHint:error.errorDescription];

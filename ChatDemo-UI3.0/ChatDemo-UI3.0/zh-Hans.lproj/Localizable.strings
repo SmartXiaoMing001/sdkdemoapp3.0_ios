@@ -213,7 +213,7 @@
 "chatroom.fetchInfoFail" = "获取聊天室详情失败";
 "chatroom.joinFailed" = "加入聊天室\'%@\'失败";
 "chatroom.join" = "\'%@\'加入聊天室\'%@\'";
-"chatroom.leave" = "\'%@\'离开聊天室\'%@\'";
+"chatroom.leave.hint" = "\'%@\'离开聊天室\'%@\'";
 "chatroom.remove" = "被踢出聊天室\'%@\'";
 "chatroom.create.inputName" = "请输入聊天室名称";
 "chatroom.create.inputDescribe" = "请输入聊天室简介";
@@ -326,7 +326,7 @@
 "title.groupApply" = "群组通知";
 "title.groupSubjectChanging" = "修改群名称";
 "title.groupSearchMessage" = "查找聊天记录";
-"title.chatroomlist" = "聊天室列表";
+"title.chatroom" = "聊天室";
 "title.robotlist" = "环信助手";
 "title.profile" = "详细资料";
 "title.createChatroom" = "创建聊天室";
@@ -360,6 +360,7 @@
 "setting.iospushname" = "iOS离线推送昵称";
 "setting.useIp" = "使用IP";
 "setting.deleteConWhenLeave" = "退群时删除会话";
+"setting.autoAcceptGrupInvite" = "自动同意进群邀请";
 "setting.microphoneNoAuthority" = "未获得授权使用麦克风";
 "setting.microphoneAuthority" = "请在iOS\"设置中\"-\"隐私\"-\"麦克风\"中打开";
 "setting.cameraNoAuthority" = "未获得授权使用相机";

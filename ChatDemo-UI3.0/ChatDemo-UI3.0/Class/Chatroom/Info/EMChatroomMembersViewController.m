@@ -95,7 +95,7 @@
     } else if (buttonIndex == 1) { //加入黑名单
         self.chatroom = [[EMClient sharedClient].roomManager blockMembers:@[userName] fromChatroom:self.chatroom.chatroomId error:&error];
     } else if (buttonIndex == 2) {  //禁言
-        EMMuteMember *muteMember = [EMMuteMember createWithUsername:userName muteSeconds:-1];
+        EMMuteMember *muteMember = [EMMuteMember createWithUsername:userName muteMilliseconds:-1];
         self.chatroom = [[EMClient sharedClient].roomManager muteMembers:@[muteMember] fromChatroom:self.chatroom.chatroomId error:&error];
     } else if (buttonIndex == 3) {  //升为管理员
         self.chatroom = [[EMClient sharedClient].roomManager addAdmin:userName toChatroom:self.chatroom.chatroomId error:&error];
@@ -103,8 +103,14 @@
     
     [self hideHud];
     if (!error) {
-        [self.dataArray removeObject:userName];
-        [self.tableView reloadData];
+        if (buttonIndex != 2) {
+            [self.dataArray removeObject:userName];
+            [self.tableView reloadData];
+        } else {
+            [self showHint:@"禁言成功"];
+        }
+        
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"UpdateChatroomDetail" object:self.chatroom];
     }
     else {
         [self showHint:error.errorDescription];
